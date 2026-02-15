@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Polymarket Oracle Bot</title>
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,sans-serif;background:#0f1117;color:#e6edf3;margin:0;padding:1rem;min-height:100vh}
+    h1{font-size:1.25rem;margin:0 0 0.5rem 0;color:#58a6ff}
+    .api-hint{font-size:0.75rem;color:#6e7681;margin-bottom:1rem}
+    .api-hint a{color:#58a6ff}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;margin-bottom:1rem}
+    .card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:0.75rem 1rem}
+    .card .label{font-size:0.75rem;color:#8b949e;text-transform:uppercase;letter-spacing:0.05em}
+    .card .value{font-size:1.25rem;font-weight:600;margin-top:0.25rem}
+    .card .value.positive{color:#3fb950}
+    .card .value.negative{color:#f85149}
+    .status{padding:0.25rem 0.5rem;border-radius:4px;font-size:0.85rem;font-weight:500}
+    .status.running{background:#238636;color:#fff}
+    .status.paused{background:#da3633;color:#fff}
+    .activity{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:0.75rem;max-height:320px;overflow-y:auto}
+    .activity h2{font-size:0.9rem;margin:0 0 0.5rem 0;color:#8b949e}
+    .activity ul{list-style:none;margin:0;padding:0;font-size:0.8rem}
+    .activity li{padding:0.35rem 0;border-bottom:1px solid #21262d}
+    .activity li:last-child{border-bottom:none}
+    .activity .ts{color:#6e7681;margin-right:0.5rem}
+    .activity .type{display:inline-block;min-width:4rem;color:#58a6ff}
+    .activity .msg{color:#c9d1d9}
+  </style>
+</head>
+<body>
+  <h1>Polymarket Oracle Bot</h1>
+  <p class="api-hint" id="api-hint">Loading…</p>
+  <div class="cards">
+    <div class="card"><span class="label">Status</span><div class="value"><span id="status" class="status">—</span></div></div>
+    <div class="card"><span class="label">Session P&L</span><div class="value" id="pnl">—</div></div>
+    <div class="card"><span class="label">Exposure</span><div class="value" id="exposure">—</div></div>
+    <div class="card"><span class="label">Pending bets</span><div class="value" id="pending">—</div></div>
+    <div class="card"><span class="label">Last cycle</span><div class="value" id="cycle">—</div></div>
+  </div>
+  <div class="activity">
+    <h2>Recent activity</h2>
+    <ul id="activity"></ul>
+  </div>
+  <script>
+    (function(){
+      var params = new URLSearchParams(window.location.search);
+      var apiBase = params.get('api') || '';
+      if (apiBase && apiBase.endsWith('/')) apiBase = apiBase.slice(0, -1);
+      document.getElementById('api-hint').innerHTML = apiBase
+        ? 'API: <a href="' + apiBase + '/api/status" target="_blank" rel="noopener">' + apiBase + '</a>'
+        : 'API: add <code>?api=https://your-bot.up.railway.app</code> (no trailing slash)';
+      function fmtPnl(v){ if (v == null) return '—'; return v >= 0 ? '+$' + v.toFixed(2) : '-$' + Math.abs(v).toFixed(2); }
+      function render(){
+        if (!apiBase) { document.getElementById('status').textContent = 'Set ?api=…'; return; }
+        var url = apiBase + '/api/status';
+        fetch(url).then(function(r){ return r.json(); }).then(function(d){
+          document.getElementById('status').textContent = d.status === 'paused' ? 'Paused' : 'Running';
+          document.getElementById('status').className = 'status ' + (d.status === 'paused' ? 'paused' : 'running');
+          document.getElementById('pnl').textContent = fmtPnl(d.sessionPnl);
+          document.getElementById('pnl').className = 'value ' + (d.sessionPnl != null && d.sessionPnl >= 0 ? 'positive' : 'negative');
+          document.getElementById('exposure').textContent = d.exposure != null ? '$' + Number(d.exposure).toFixed(0) + ' / $' + Number(d.exposureLimit).toFixed(0) : '—';
+          document.getElementById('pending').textContent = d.pendingCount != null ? d.pendingCount + ' / ' + (d.maxPending || 2) : '—';
+          document.getElementById('cycle').textContent = d.lastCycle ? ('#' + d.lastCycle.cycle + ' lag ' + Number(d.lastCycle.lagPct).toFixed(3) + '%') : '—';
+          var ul = document.getElementById('activity');
+          ul.innerHTML = (d.activity || []).map(function(e){
+            return '<li><span class="ts">' + e.ts.slice(11, 19) + '</span><span class="type">' + e.type + '</span><span class="msg">' + e.message + '</span></li>';
+          }).join('') || '<li>No activity yet</li>';
+        }).catch(function(){
+          document.getElementById('status').textContent = 'Error';
+          document.getElementById('status').className = 'status paused';
+        });
+      }
+      render();
+      setInterval(render, 5000);
+    })();
+  </script>
+</body>
+</html>
