@@ -27,6 +27,17 @@
     .activity .ts{color:#6e7681;margin-right:0.5rem}
     .activity .type{display:inline-block;min-width:4rem;color:#58a6ff}
     .activity .msg{color:#c9d1d9}
+    .scan-section{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:0.75rem;margin-bottom:1rem}
+    .scan-section h2{font-size:0.9rem;margin:0 0 0.5rem 0;color:#8b949e}
+    .scan-meta{font-size:0.8rem;color:#c9d1d9;margin:0 0 0.5rem 0}
+    .scan-table-wrap{overflow-x:auto;max-height:280px;overflow-y:auto}
+    .scan-table{width:100%;border-collapse:collapse;font-size:0.8rem}
+    .scan-table th,.scan-table td{padding:0.35rem 0.5rem;text-align:left;border-bottom:1px solid #21262d}
+    .scan-table th{color:#8b949e;font-weight:500}
+    .scan-table .market-q{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .outcome-bet{color:#3fb950;font-weight:600}
+    .outcome-hold{color:#d29922}
+    .outcome-skip{color:#8b949e}
   </style>
 </head>
 <body>
@@ -38,6 +49,11 @@
     <div class="card"><span class="label">Exposure</span><div class="value" id="exposure">—</div></div>
     <div class="card"><span class="label">Pending bets</span><div class="value" id="pending">—</div></div>
     <div class="card"><span class="label">Last cycle</span><div class="value" id="cycle">—</div></div>
+  </div>
+  <div class="scan-section">
+    <h2>Markets scanned (last cycle)</h2>
+    <p class="scan-meta" id="scan-meta">—</p>
+    <div class="scan-table-wrap"><table class="scan-table"><thead><tr><th>Market</th><th>t (s)</th><th>YES</th><th>NO</th><th>Outcome</th><th>Detail</th></tr></thead><tbody id="scan-tbody"></tbody></table></div>
   </div>
   <div class="activity">
     <h2>Recent activity</h2>
@@ -63,6 +79,18 @@
           document.getElementById('exposure').textContent = d.exposure != null ? '$' + Number(d.exposure).toFixed(0) + ' / $' + Number(d.exposureLimit).toFixed(0) : '—';
           document.getElementById('pending').textContent = d.pendingCount != null ? d.pendingCount + ' / ' + (d.maxPending || 2) : '—';
           document.getElementById('cycle').textContent = d.lastCycle ? ('#' + d.lastCycle.cycle + ' lag ' + Number(d.lastCycle.lagPct).toFixed(3) + '%') : '—';
+          var scan = d.lastScan;
+          document.getElementById('scan-meta').textContent = scan ? ('Cycle ' + scan.cycle + ' · ' + scan.marketsInWindow + ' market(s) in 30s–300s window') : '—';
+          var tbody = document.getElementById('scan-tbody');
+          if (scan && scan.markets && scan.markets.length > 0) {
+            tbody.innerHTML = scan.markets.map(function(m){
+              var yes = m.yesMid != null ? (Number(m.yesMid).toFixed(1) + '¢') : '—';
+              var no = m.noMid != null ? (Number(m.noMid).toFixed(1) + '¢') : '—';
+              var out = m.outcome;
+              out = (out === 'bet' ? '<span class="outcome-bet">BET</span>' : out === 'hold' ? '<span class="outcome-hold">HOLD</span>' : out === 'poor_liquidity' ? '<span class="outcome-skip">poor liq</span>' : '<span class="outcome-skip">' + out + '</span>');
+              return '<tr><td class="market-q">' + m.question + '</td><td>' + Math.round(m.timeLeftSec) + '</td><td>' + yes + '</td><td>' + no + '</td><td>' + out + '</td><td class="detail">' + (m.detail || '') + '</td></tr>';
+            }).join('');
+          } else { tbody.innerHTML = '<tr><td colspan="6">No markets in last cycle</td></tr>'; }
           var ul = document.getElementById('activity');
           ul.innerHTML = (d.activity || []).map(function(e){
             return '<li><span class="ts">' + e.ts.slice(11, 19) + '</span><span class="type">' + e.type + '</span><span class="msg">' + e.message + '</span></li>';
