@@ -38,6 +38,10 @@
     .outcome-bet{color:#3fb950;font-weight:600}
     .outcome-hold{color:#d29922}
     .outcome-skip{color:#8b949e}
+    .settings-section{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:0.75rem;margin-bottom:1rem}
+    .settings-section h2{font-size:0.9rem;margin:0 0 0.5rem 0;color:#8b949e}
+    .settings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.35rem 1rem;font-size:0.8rem;color:#c9d1d9}
+    .settings-grid span.s{color:#6e7681;margin-right:0.35rem}
   </style>
 </head>
 <body>
@@ -49,6 +53,10 @@
     <div class="card"><span class="label">Exposure</span><div class="value" id="exposure">—</div></div>
     <div class="card"><span class="label">Pending bets</span><div class="value" id="pending">—</div></div>
     <div class="card"><span class="label">Last cycle</span><div class="value" id="cycle">—</div></div>
+  </div>
+  <div class="settings-section">
+    <h2>Settings (from env)</h2>
+    <div class="settings-grid" id="settings-grid">—</div>
   </div>
   <div class="scan-section">
     <h2>Markets scanned (last cycle)</h2>
@@ -79,6 +87,17 @@
           document.getElementById('exposure').textContent = d.exposure != null ? '$' + Number(d.exposure).toFixed(0) + ' / $' + Number(d.exposureLimit).toFixed(0) : '—';
           document.getElementById('pending').textContent = d.pendingCount != null ? d.pendingCount + ' / ' + (d.maxPending || 2) : '—';
           document.getElementById('cycle').textContent = d.lastCycle ? ('#' + d.lastCycle.cycle + ' lag ' + Number(d.lastCycle.lagPct).toFixed(3) + '%') : '—';
+          var s = d.settings;
+          if (s) {
+            var g = document.getElementById('settings-grid');
+            g.innerHTML = '<span class="s">Loop</span>' + s.loopIntervalSec + 's · <span class="s">Bankroll</span>$' + s.bankrollUsd + ' · <span class="s">Min edge</span>' + s.minEdgePct + '%<br>' +
+              '<span class="s">Time filter</span>' + s.timeFilterMinSec + 's – ' + s.timeFilterMaxSec + 's · <span class="s">DRY_RUN</span>' + (s.dryRun ? 'true' : 'false') + '<br>' +
+              '<span class="s">Min lag</span>' + Number(s.minLagPct).toFixed(3) + '% · <span class="s">Min move</span>' + Number(s.minTotalMovePct).toFixed(2) + '%<br>' +
+              '<span class="s">Exposure</span>' + s.maxExposurePct + '% · <span class="s">Max pending</span>' + s.maxPendingBets + ' · <span class="s">Slippage</span>' + s.maxSlippagePct + '%<br>' +
+              '<span class="s">Cross-ex</span>' + (s.crossExchange ? 'ON' : 'OFF') + ' · <span class="s">Momentum (T5)</span>' + (s.momentumReversal ? 'ON' : 'OFF') + '<br>' +
+              '<span class="s">Take profit</span>' + s.takeProfitPct + '% · <span class="s">Stop loss</span>' + (s.stopLossPct ? s.stopLossPct + '%' : 'OFF') + ' · <span class="s">Daily stop</span>' + s.dailyStopLossPct + '%<br>' +
+              '<span class="s">Circuit breaker</span>' + s.circuitBreakerFails + ' fails / ' + s.circuitBreakerPauseMin + 'min · <span class="s">File log</span>' + (s.fileLogging ? 'ON' : 'OFF') + ' · <span class="s">Telegram</span>' + (s.telegramAlerts ? 'ON' : 'OFF');
+          }
           var scan = d.lastScan;
           document.getElementById('scan-meta').textContent = scan ? ('Cycle ' + scan.cycle + ' · ' + scan.marketsInWindow + ' market(s) in 30s–300s window') : '—';
           var tbody = document.getElementById('scan-tbody');
