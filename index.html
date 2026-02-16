@@ -92,7 +92,7 @@
             var g = document.getElementById('settings-grid');
             g.innerHTML = '<span class="s">Loop</span>' + s.loopIntervalSec + 's · <span class="s">Bankroll</span>$' + s.bankrollUsd + ' · <span class="s">Min edge</span>' + s.minEdgePct + '%<br>' +
               '<span class="s">Time filter</span>' + s.timeFilterMinSec + 's – ' + s.timeFilterMaxSec + 's · <span class="s">DRY_RUN</span>' + (s.dryRun ? 'true' : 'false') + '<br>' +
-              '<span class="s">Min lag</span>' + Number(s.minLagPct).toFixed(3) + '% · <span class="s">Min move</span>' + Number(s.minTotalMovePct).toFixed(2) + '%<br>' +
+              '<span class="s">Min lag</span>' + Number(s.minLagPct).toFixed(3) + '% · <span class="s">Min move</span>' + Number(s.minTotalMovePct).toFixed(2) + '% · <span class="s">T3 min t</span>' + Number(s.minTimeForT3Sec || 60) + 's<br>' +
               '<span class="s">Exposure</span>' + s.maxExposurePct + '% · <span class="s">Max pending</span>' + s.maxPendingBets + ' · <span class="s">Slippage</span>' + s.maxSlippagePct + '%<br>' +
               '<span class="s">Cross-ex</span>' + (s.crossExchange ? 'ON' : 'OFF') + ' · <span class="s">Momentum (T5)</span>' + (s.momentumReversal ? 'ON' : 'OFF') + '<br>' +
               '<span class="s">Take profit</span>' + s.takeProfitPct + '% · <span class="s">Stop loss</span>' + (s.stopLossPct ? s.stopLossPct + '%' : 'OFF') + ' · <span class="s">Daily stop</span>' + s.dailyStopLossPct + '%<br>' +
